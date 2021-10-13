@@ -39,12 +39,12 @@ function getOneById(req, res) {
     .catch(console.error);
 }
 
-function updateOneById (req, res) {
-  console.log({param: req.params, body: req.body});
+function updateOneById(req, res) {
+  console.log({ param: req.params, body: req.body });
 
   const bookToUpdateById = {
     id: req.params.id,
-    ...req.body
+    ...req.body,
   };
   const updateOneByIdSQL = `
   UPDATE books
@@ -57,21 +57,21 @@ function updateOneById (req, res) {
   RETURNING *;
   `;
 
-  const { title, type, author, topic, publicationdate, id} = bookToUpdateById
+  const { title, type, author, topic, publicationdate, id } = bookToUpdateById;
 
   db.query(updateOneByIdSQL, [title, type, author, topic, publicationdate, id])
-  .then((result) => res.json({ data: result.rows[0]}))
-  .catch(console.error);
-};
+    .then((result) => res.json({ data: result.rows[0] }))
+    .catch(console.error);
+}
 
-function updateOneByTitle (req, res) {
- console.log({params: req.params, body: req.body});
+function updateOneByTitle(req, res) {
+  console.log({ params: req.params, body: req.body });
 
- const bookToUpdateByTitle = {
-   id: req.params.id,
-   ...req.body
- };
- const updateOneByTitleSQL = `
+  const bookToUpdateByTitle = {
+    id: req.params.id,
+    ...req.body,
+  };
+  const updateOneByTitleSQL = `
  UPDATE books
  SET type = $1,
  author = $2,
@@ -81,11 +81,11 @@ function updateOneByTitle (req, res) {
  RETURNING *;
  `;
 
- const {type, author, topic, publicationdate, title} = bookToUpdateByTitle
+  const { type, author, topic, publicationdate, title } = bookToUpdateByTitle;
 
- db.query(updateOneByTitleSQL, [type, author, topic, publicationdate, title])
- .then((result) => res.json({ data: result.rows[0]}))
- .catch(console.error);
+  db.query(updateOneByTitleSQL, [type, author, topic, publicationdate, title])
+    .then((result) => res.json({ data: result.rows[0] }))
+    .catch(console.error);
 }
 
 function patchOneBookById(req, res) {
@@ -105,8 +105,8 @@ function patchOneBookById(req, res) {
   for (const key in bookToUpdate) {
     sqlTemplate += `${key} = $`;
     sqlTemplate += i;
-    sqlTemplate += ','
-    sqlParams.push(bookToUpdate[key])
+    sqlTemplate += ",";
+    sqlParams.push(bookToUpdate[key]);
     i = i + 1;
   }
 
@@ -115,14 +115,48 @@ function patchOneBookById(req, res) {
   sqlTemplate = sqlTemplate.slice(0, sqlTemplate.length - 1);
   sqlTemplate += `WHERE id = $`;
   sqlTemplate += i;
-  sqlTemplate += `RETURNING *`
+  sqlTemplate += `RETURNING *`;
 
   console.log(sqlTemplate);
   console.log(sqlParams);
 
   db.query(sqlTemplate, sqlParams)
-  .then((result) => res.json({ data: result.rows[0]}))
-  .catch(console.error);
+    .then((result) => res.json({ data: result.rows[0] }))
+    .catch(console.error);
+}
+
+// function deleteBookById(req, res) {
+//   console.log({ params: req.params });
+//   const id = req.params.id;
+
+//   const deleteBookByIdSQL = `
+//   DELETE FROM books
+//   WHERE id = $1;
+//   `;
+
+//   db.query(deleteBookByIdSQL, [id])
+//     .then((result) => res.json({ message: "Delete Successful!" }))
+//     .catch(console.error);
+// };
+
+const deleteBookById = async (req, res) => {
+  console.log({ params: req.params});
+
+  const id = req.params.id; 
+
+  const deleteBookByIdSQL = `
+  DELETE FROM books 
+  WHERE id = $1
+  `;
+
+  try {
+    const result = await db.query(deleteBookByIdSQL, [id]);
+    res.json({ message: "Delete Successful!" });
+  } catch (error) {
+    console.error("ERROR deleteBookById: ", { error: error.message });
+
+    res.status(500).json({ error: error.message });
+  }
 };
 
 module.exports = {
@@ -131,5 +165,6 @@ module.exports = {
   getOneById,
   updateOneById,
   updateOneByTitle,
-  patchOneBookById
+  patchOneBookById,
+  deleteBookById,
 };

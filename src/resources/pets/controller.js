@@ -39,15 +39,15 @@ function getOneById(req, res) {
     .catch(console.error);
 }
 
-function updateOneById (req, res) {
-  console.log({params: req.params, body: req.body});
+function updateOneById(req, res) {
+  console.log({ params: req.params, body: req.body });
 
   const petToUpdate = {
     id: req.params.id,
-    ...req.body
-  }
+    ...req.body,
+  };
 
-  const updateOneByIdSQL =`
+  const updateOneByIdSQL = `
   UPDATE pets
   SET name = $1,
   age = $2,
@@ -57,25 +57,45 @@ function updateOneById (req, res) {
   WHERE id = $6;
   `;
 
-  const {name, age, type, breed, microchip, id} = petToUpdate
+  const { name, age, type, breed, microchip, id } = petToUpdate;
 
   db.query(updateOneByIdSQL, [name, age, type, breed, microchip, id])
- .then((result) => res.json({ data: result.rows[0]}))
- .catch(console.error);
+    .then((result) => res.json({ data: result.rows[0] }))
+    .catch(console.error);
 }
 
-function deletePetById (req, res) {
-  console.log({params: req.params});
-  const id = req.params.id
+// function deletePetById(req, res) {
+//   console.log({ params: req.params });
+//   const id = req.params.id;
 
-  const deletePetByIdSQL =`
-  DELETE FROM pets
-  WHERE id = $1;
+//   const deletePetByIdSQL = `
+//   DELETE FROM pets
+//   WHERE id = $1;
+//   `;
+
+//   db.query(deletePetByIdSQL, [id])
+//     .then((result) => res.json({ message: "Delete Successful!" }))
+//     .catch(console.error);
+// }
+
+const deletePetById = async (req, res) => {
+  console.log({ params: req.params});
+
+  const id = req.params.id; 
+
+  const deletePetByIdSQL = `
+  DELETE FROM pets 
+  WHERE id = $1
   `;
 
-  db.query(deletePetByIdSQL, [id])
-  .then((result) => res.json({ data: result.rows[0]}))
-  .catch(console.error);  
+  try {
+    const result = await db.query(deletePetByIdSQL, [id]);
+    res.json({ message: "Delete Successful!" });
+  } catch (error) {
+    console.error("ERROR deletePetById: ", { error: error.message });
+
+    res.status(500).json({ error: error.message });
+  }
 };
 
 function patchOnePetById(req, res) {
@@ -95,8 +115,8 @@ function patchOnePetById(req, res) {
   for (const key in petToUpdate) {
     sqlTemplate += `${key} = $`;
     sqlTemplate += i;
-    sqlTemplate += ','
-    sqlParams.push(petToUpdate[key])
+    sqlTemplate += ",";
+    sqlParams.push(petToUpdate[key]);
     i = i + 1;
   }
 
@@ -105,16 +125,15 @@ function patchOnePetById(req, res) {
   sqlTemplate = sqlTemplate.slice(0, sqlTemplate.length - 1);
   sqlTemplate += `WHERE id = $`;
   sqlTemplate += i;
-  sqlTemplate += `RETURNING *`
+  sqlTemplate += `RETURNING *`;
 
   console.log(sqlTemplate);
   console.log(sqlParams);
 
   db.query(sqlTemplate, sqlParams)
-  .then((result) => res.json({ data: result.rows[0]}))
-  .catch(console.error);
-};
-
+    .then((result) => res.json({ data: result.rows[0] }))
+    .catch(console.error);
+}
 
 module.exports = {
   createOne,
@@ -122,6 +141,5 @@ module.exports = {
   getOneById,
   updateOneById,
   deletePetById,
-  patchOnePetById
-
+  patchOnePetById,
 };
