@@ -88,10 +88,48 @@ function updateOneByTitle (req, res) {
  .catch(console.error);
 }
 
+function patchOneBookById(req, res) {
+  const id = req.params.id;
+  console.log(req.body);
+  const bookToUpdate = req.body;
+
+  let sqlTemplate = `
+  UPDATE books SET
+  `;
+
+  console.log("bookToUpdate object: ", bookToUpdate);
+
+  const sqlParams = [];
+
+  let i = 1;
+  for (const key in bookToUpdate) {
+    sqlTemplate += `${key} = $`;
+    sqlTemplate += i;
+    sqlTemplate += ','
+    sqlParams.push(bookToUpdate[key])
+    i = i + 1;
+  }
+
+  sqlParams.push(id);
+
+  sqlTemplate = sqlTemplate.slice(0, sqlTemplate.length - 1);
+  sqlTemplate += `WHERE id = $`;
+  sqlTemplate += i;
+  sqlTemplate += `RETURNING *`
+
+  console.log(sqlTemplate);
+  console.log(sqlParams);
+
+  db.query(sqlTemplate, sqlParams)
+  .then((result) => res.json({ data: result.rows[0]}))
+  .catch(console.error);
+};
+
 module.exports = {
   createOne,
   getAll,
   getOneById,
   updateOneById,
-  updateOneByTitle
+  updateOneByTitle,
+  patchOneBookById
 };

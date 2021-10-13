@@ -64,9 +64,64 @@ function updateOneById (req, res) {
  .catch(console.error);
 }
 
+function deletePetById (req, res) {
+  console.log({params: req.params});
+  const id = req.params.id
+
+  const deletePetByIdSQL =`
+  DELETE FROM pets
+  WHERE id = $1;
+  `;
+
+  db.query(deletePetByIdSQL, [id])
+  .then((result) => res.json({ data: result.rows[0]}))
+  .catch(console.error);  
+};
+
+function patchOnePetById(req, res) {
+  const id = req.params.id;
+  console.log(req.body);
+  const petToUpdate = req.body;
+
+  let sqlTemplate = `
+  UPDATE pets SET
+  `;
+
+  console.log("petToUpdate object: ", petToUpdate);
+
+  const sqlParams = [];
+
+  let i = 1;
+  for (const key in petToUpdate) {
+    sqlTemplate += `${key} = $`;
+    sqlTemplate += i;
+    sqlTemplate += ','
+    sqlParams.push(petToUpdate[key])
+    i = i + 1;
+  }
+
+  sqlParams.push(id);
+
+  sqlTemplate = sqlTemplate.slice(0, sqlTemplate.length - 1);
+  sqlTemplate += `WHERE id = $`;
+  sqlTemplate += i;
+  sqlTemplate += `RETURNING *`
+
+  console.log(sqlTemplate);
+  console.log(sqlParams);
+
+  db.query(sqlTemplate, sqlParams)
+  .then((result) => res.json({ data: result.rows[0]}))
+  .catch(console.error);
+};
+
+
 module.exports = {
   createOne,
   getAll,
   getOneById,
-  updateOneById
+  updateOneById,
+  deletePetById,
+  patchOnePetById
+
 };
